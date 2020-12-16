@@ -26,7 +26,10 @@ export function execute(...operations) {
   };
 
   return state => {
-    return commonExecute(...operations)({
+    return commonExecute(
+      login,
+      ...operations
+    )({
       ...initialState,
       ...state,
     });
@@ -34,48 +37,77 @@ export function execute(...operations) {
 }
 
 /**
- * Make a POST request
+ * Logs in to Azure AD.
+ * @example
+ *  login(state)
+ * @function
+ * @param {State} state - Runtime state.
+ * @returns {State}
+ */
+function login(state) {
+  const {
+    host,
+    userName,
+    password,
+    scope,
+    client_secret,
+    client_id,
+    tenant_id,
+    grant_type,
+    api,
+  } = state.configuration;
+
+  const data = {
+    grant_type,
+    client_id,
+    client_secret,
+    scope,
+    userName,
+    password,
+  };
+
+  const body = JSON.stringify({
+    user: {
+      user_name: user,
+      password,
+    },
+  });
+
+  const params = {
+    method: 'POST',
+    url: `${url}/api/v2/tokens`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body,
+  };
+
+  return post(
+    `${host}${tenant_id}/oauth2/v2.0/token`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      form: data,
+    },
+    state => {
+      console.log('Authentication successful');
+      return { ...state, access_token: state.data.access_token };
+    }
+  )(state);
+}
+
+/**
+ * Assign a manager... WRITE ME!
  * @public
  * @example
  * execute(
- *   post(params)
+ *   assignManager(params)
  * )(state)
  * @constructor
  * @param {object} params - data to make the fetch
  * @returns {Operation}
  */
-export function post(params, callback) {
-  return state => {
-    const { baseUrl, username, password } = state.configuration;
-    const { url, body, headers } = expandReferences(params)(state);
-
-    return axios({
-      method: 'post',
-      headers: {},
-      params: {},
-      baseURL,
-      url,
-      data: body,
-      auth: { username, password },
-    })
-      .then(response => {
-        console.log(
-          'Printing response...\n',
-          JSON.stringify(response, null, 4) + '\n',
-          'POST succeeded.'
-        );
-
-        const nextState = composeNextState(state, response);
-        if (callback) resolve(callback(nextState));
-        resolve(nextState);
-      })
-      .catch(error => {
-        console.log(error);
-        reject(error);
-      });
-  };
-}
-
 export function assignManager() {
   return state => {
     return new Promise((resolve, reject) => {
