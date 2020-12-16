@@ -1,7 +1,7 @@
 {
-  "name": "language-template",
+  "name": "language-activedirectory",
   "version": "1.0.0",
-  "description": "An Language Package Template for OpenFn",
+  "description": "An adaptor for working with Azure's Active Directory",
   "main": "lib/index.js",
   "scripts": {
     "build": "make",
